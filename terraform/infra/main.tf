@@ -31,23 +31,16 @@ resource "helm_release" "ingress_nginx" {
   ]
 }
 
-# LoadBalancer support for kind
-resource "kubernetes_manifest" "metallb_native" {
-  manifest = yamldecode(file("${path.module}/metallb-native.yaml"))
-}
-
-resource "kubernetes_manifest" "metallb_config" {
-  manifest = yamldecode(file("${path.module}/metallb-conf.yaml"))
-}
-
-# Install argo-rollouts
-resource "kubernetes_namespace" "argo" {
-  metadata {
-    name = "argo-rollouts"
-  }
-}
-
-resource "kubernetes_manifest" "argo_rollouts" {
-  manifest = yamldecode(file("${path.module}/argo-rollout-install.yaml"))
-}
-
+# Install prometheus-operator
+#resource "helm_release" "prometheus" {
+#  name = local.app_name
+#  namespace = kubernetes_namespace.this.metadata.0.name
+#  repository = "https://prometheus-community.github.io/helm-charts"
+#  chart = "kube-prometheus-stack"
+#
+#  values = [ templatefile("${path.module}/prometheus-values.yaml.tpl",
+#    {
+#      namespace = kubernetes_namespace.this.metadata.0.name
+#    })
+#  ]
+#}

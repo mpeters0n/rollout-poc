@@ -1,0 +1,28 @@
+#!/bin/bash
+#
+# This completes the parts of the install that aren't 
+# currently/easily terraformed
+#
+
+#
+# Install LoadBalancer support for nginx-ingress
+#
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.13.7/config/manifests/metallb-native.yaml
+#kubectk apply -f ./metallb-native.yaml
+
+# Wait for the install to complete...
+echo "Waiting for metallb to complete the install..."
+kubectl wait --namespace metallb-system \
+                --for=condition=ready pod \
+                --selector=app=metallb \
+                --timeout=90s
+
+kubectk apply -f ./metallb-config.yaml
+
+#
+# Install argo-rollouts
+#
+kubectl create namespace argo-rollouts
+kubectl apply -n argo-rollouts -f https://github.com/argoproj/argo-rollouts/releases/latest/download/install.yaml
+
+exit 0

@@ -1,0 +1,8 @@
+#!/bin/bash
+#
+# Destroy the testing cluster
+#
+
+kind delete clusters mpeterson
+
+exit 0

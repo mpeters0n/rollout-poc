@@ -44,6 +44,10 @@ resource "kubernetes_deployment" "this" {
           "app.kubernetes.io/name" = local.app_name
           "app" = local.app_name
         }
+        annotations = {
+          "prometheus.io/scrape" = "true"
+          "prometheus.io/port"   = "9797"
+        }
       }
       spec {
         container {
@@ -100,14 +104,14 @@ resource "kubernetes_deployment" "this" {
 }
 
 # Define the Rollout deployment
-resource "kubernetes_manifest" "argo_rollout" {
-  manifest = yamldecode(templatefile("${path.module}/podinfo-rollout.yaml", {
-    app_name  = local.app_name
-    namespace = kubernetes_namespace.this.metadata.0.name
-  }))
-
-  depends_on = [ kubernetes_deployment.this ]
-}
+#resource "kubernetes_manifest" "argo_rollout" {
+#  manifest = yamldecode(templatefile("${path.module}/podinfo-rollout.yaml.tpl", {
+#    app_name  = local.app_name
+#    namespace = kubernetes_namespace.this.metadata.0.name
+#  }))
+#
+#  depends_on = [ kubernetes_deployment.this ]
+#}
 
 resource "kubernetes_horizontal_pod_autoscaler_v2" "this" {
   metadata {
@@ -134,7 +138,7 @@ resource "kubernetes_horizontal_pod_autoscaler_v2" "this" {
     }
   }
 
-  depends_on = [ kubernetes_manifest.argo_rollout ]
+#  depends_on = [ kubernetes_manifest.argo_rollout ]
 }
 
 resource "kubernetes_service" "this" {
@@ -149,7 +153,7 @@ resource "kubernetes_service" "this" {
   spec {
     selector = {
       "app" = "${local.app_name}"
-      "rollouts-pod-template-hash" = "7b5d5dd876"
+      "rollouts-pod-template-hash" = "9c994888c"
     }
     port {
       name = "http"
@@ -172,7 +176,7 @@ resource "kubernetes_service" "canary" {
   spec {
     selector = {
       "app" = "${local.app_name}"
-      "rollouts-pod-template-hash" = "7b5d5dd876"
+      "rollouts-pod-template-hash" = "9c994888c"
     }
     port {
       name = "http"
@@ -213,3 +217,13 @@ resource "kubernetes_ingress_v1" "this" {
 
   depends_on = [ kubernetes_service.this ]
 }
+
+#resource "kubernetes_manifest" "service_monitor" {
+#  manifest = yamldecode(templatefile("${path.module}/servicemonitor.yaml", {
+#    namespace = kubernetes_namespace.this.metadata.0.name
+#    app_name = local.app_name
+#  }))
+#
+#  depends_on = [ kubernetes_deployment.this ]
+#}
+

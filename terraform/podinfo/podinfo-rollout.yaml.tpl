@@ -1,13 +1,13 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
-  namespace: podinfo
-  name: podinfo
+  namespace: ${namespace}
+  name: ${app_name}
 spec:
   strategy:
     canary:
-      canaryService: podinfo-canary
-      stableService: podinfo-stable
+      canaryService: ${app_name}-canary
+      stableService: ${app_name}-stable
       trafficRouting:
         nginx:
           stableIngress: podinfo-ingress
@@ -16,21 +16,17 @@ spec:
         - templateName: success-rate
         args:
         - name: service-name
-          value: podinfo-canary
+          value: ${app_name}-canary
       steps:
       - setWeight: 10
-      - pause: {duration: 5m}
       - setWeight: 20
-      - pause: {duration: 5m}
       - setWeight: 40
-      - pause: {duration: 5m}
       - setWeight: 60
-      - pause: {duration: 5m}
   revisionHistoryLimit: 2
   selector:
     matchLabels:
-      app: podinfo
+      app: ${app_name}
   workloadRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: podinfo
+    name: ${app_name}
